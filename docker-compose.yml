@@ -3,6 +3,15 @@ services:
   outline:
     image: docker.getoutline.com/outlinewiki/outline:latest
     env_file: .env
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - URL=https://outline.ozeliurs.com
+      - DATABASE_URL=postgres://user:pass@localhost:5432/outline
+      - REDIS_URL=redis://localhost:6379
+      - FILE_STORAGE=local
+      - FILE_STORAGE_LOCAL_ROOT_DIR=/var/lib/outline/data
+      - FILE_STORAGE_UPLOAD_MAX_SIZE=262144000
     volumes:
       - ./outline/app:/var/lib/outline/data
     depends_on:
