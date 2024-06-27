@@ -1,5 +1,13 @@
 ## First time deployment
 
+```
+docker compose run --rm outline yarn db:create --env=production-ssl-disabled
+```
+
+```
+docker compose run --rm outline yarn db:migrate --env=production-ssl-disabled
+```
+
 If your server does not have a gpg key, you have to generate one. You can do so by running the following command:
 
 ```bash

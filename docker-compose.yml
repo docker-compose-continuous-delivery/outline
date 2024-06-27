@@ -1,26 +1,65 @@
-version: "3.9"
-
 services:
 
-  hello-world:
-    image: "traefik/whoami"
-    container_name: "simple-service"
-    restart: unless-stopped
+  outline:
+    image: docker.getoutline.com/outlinewiki/outline:latest
+    env_file: .env
+    volumes:
+      - ./outline/app:/var/lib/outline/data
+    depends_on:
+      - postgres
+      - redis
     networks:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.simple-service.rule=Host(`hello-world.${BASE_DOMAIN:-ozeliurs.com}`)"
-      - "traefik.http.routers.simple-service.entrypoints=websecure"
-      - "traefik.http.routers.simple-service.tls=true"
-      - "traefik.http.routers.simple-service.tls.certresolver=cloudflare"
-      - "traefik.http.services.simple-service.loadbalancer.server.port=80"
-    healthcheck:
-      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:80" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      - "traefik.http.routers.outline.rule=Host(`outline.ozeliurs.com`)"
+      - "traefik.http.routers.outline.entrypoints=websecure"
+      - "traefik.http.services.outline.loadbalancer.server.port=3000"
+      - "traefik.http.routers.outline.tls=true"
+      - "traefik.http.routers.outline.tls.certresolver=cloudflare"
 
+  redis:
+    image: redis
+    env_file: ./docker.env
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis.conf:/redis.conf
+    command: [ "redis-server", "/redis.conf" ]
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 30s
+      retries: 3
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=false"
+
+  postgres:
+    image: postgres
+    env_file: ./docker.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./outline/db:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-d", "outline", "-U", "user" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    environment:
+      POSTGRES_USER: 'user'
+      POSTGRES_PASSWORD: 'pass'
+      POSTGRES_DB: 'outline'
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=false"
+
+volumes:
+  storage-data:
+  database-data:
 
 networks:
   traefik:
